@@ -22,26 +22,28 @@ def createAPIData(url):
 def filterDict(d,search):
     return {k: v for k, v in d.items() if k.startswith(search)}
 
-#def parsing_MLB_data(API_data):
+#Returns player info from API data
+def parsing_MLB_data(Api_data):
+    data_keys = getList(Api_data)
+    catogories = nestedGet(Api_data,data_keys)
+    query_dict = catogories["queryResults"]
+    player_info_dict = query_dict["row"]
+    player_info_keys = getList(player_info_dict)
+
+    #creating dictionary suitable for database
+    table_dict={}
+    for key in player_info_keys:
+      table_dict[key] = [player_info_dict[key]]
+    
+    return table_dict
 
 
 url =  "http://lookup-service-prod.mlb.com/json/named.search_player_all.bam?sport_code='mlb'&active_sw='Y'&name_part='cespedes%25'"
 data = createAPIData(url)
-data_keys = getList(data)
-catogories = nestedGet(data,data_keys)
-query_dict = catogories["queryResults"]
-player_info_dict = query_dict["row"]
-player_info_keys = getList(player_info_dict)
-
-#creating dictionary suitable for database
-table_dict={}
-for key in player_info_keys:
-  table_dict[key] = [player_info_dict[key]]
-
+table_dict = parsing_MLB_data(data)
 
 df = pd.DataFrame.from_dict(table_dict)
 col_names = list(df.columns.values)
-
 
 engine = db.create_engine('sqlite:///data_base_name.db')
 df.to_sql('Player',con = engine,if_exists='replace', index=True)
