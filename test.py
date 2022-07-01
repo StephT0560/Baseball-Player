@@ -1,5 +1,5 @@
 import unittest
-from baseball import getList, filterDict
+import baseball
 
 
 class TestFileName(unittest.TestCase):
